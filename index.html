@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode 题解搜索</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-rust.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-ruby.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-swift.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-kotlin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-scala.min.js"></script>
+
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #9333ea;
+            --light-bg: #f8fafc;
+            --dark-bg: #0a0f1c;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+        }
+
+        .dark-mode {
+            --light-bg: #0a0f1c;
+            --dark-bg: #000000;
+            --card-bg: #1a2238;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light-bg) 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        body.dark-mode {
+            background: var(--dark-bg);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .search-input {
+            border-radius: 50px;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .lang-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .result-item {
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        pre[class*="language-"] {
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            overflow-x: auto;
+            position: relative;
+            margin: 1rem 0;
+            background: #1a1b26 !important;
+        }
+
+        /* 调整代码块样式以匹配主题 */
+        .dark-mode pre[class*="language-"] {
+            background: #2d2d3a !important;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(37, 99, 235, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .search-view,
+        .code-view {
+            transition: all 0.3s ease;
+        }
+
+        .code-view {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .code-view.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .search-view.hidden {
+            display: none;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+        }
+
+        .back-button:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        span,
+        div,
+        input,
+        button {
+            color: var(--text-primary);
+        }
+
+        .bg-blue-100 {
+            background-color: #dbeafe;
+        }
+
+        .text-blue-800 {
+            color: #1e40af;
+        }
+
+        .bg-yellow-100 {
+            background-color: #fef3c7;
+        }
+
+        .text-yellow-800 {
+            color: #92400e;
+        }
+
+        .bg-red-100 {
+            background-color: #fee2e2;
+        }
+
+        .text-red-800 {
+            color: #991b1b;
+        }
+
+        .dark-mode .bg-blue-100 {
+            background-color: #1e3a8a;
+        }
+
+        .dark-mode .text-blue-800 {
+            color: #dbeafe;
+        }
+
+        .dark-mode .bg-yellow-100 {
+            background-color: #713f12;
+        }
+
+        .dark-mode .text-yellow-800 {
+            color: #fef3c7;
+        }
+
+        .dark-mode .bg-red-100 {
+            background-color: #7f1d1d;
+        }
+
+        .dark-mode .text-red-800 {
+            color: #fee2e2;
+        }
+
+        /* 复制按钮样式 */
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(31, 41, 55, 0.8);
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
+        }
+
+        pre:hover .copy-btn {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- 头部 -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10">
+            <div class="flex items-center mb-6 md:mb-0">
+                <div class="bg-blue-600 text-white p-3 rounded-xl shadow-lg mr-4">
+                    <i class="fas fa-code text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold">LeetCode 题解搜索</h1>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                    <i class="fas fa-sun text-yellow-400 dark:text-gray-600 mr-2"></i>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle" />
+                        <span class="slider"></span>
+                    </label>
+                    <i class="fas fa-moon text-gray-600 dark:text-yellow-400 ml-2"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- 搜索视图 -->
+        <div class="search-view">
+            <!-- 搜索区域 -->
+            <div class="card p-6 mb-8">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                    <input id="searchInput" type="text" placeholder="输入题号或题目名称搜索..."
+                        class="w-full pl-12 pr-4 py-4 search-input" />
+                    <div class="absolute right-2 top-2">
+                        <span id="resultCount"
+                            class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full hidden">0
+                            结果</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索结果 -->
+            <div class="w-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">搜索结果</h2>
+                    <span id="resultsCount" class="text-sm text-gray-500 dark:text-gray-400">0 个结果</span>
+                </div>
+
+                <div id="results" class="space-y-4">
+                    <div class="text-center py-10">
+                        <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500 dark:text-gray-400">输入关键词搜索题解</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 代码视图 -->
+        <div class="code-view">
+            <div class="mb-6">
+                <div class="back-button" id="backButton">
+                    <i class="fas fa-arrow-left mr-2"></i> 返回搜索
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold" id="codeTitle">代码预览</h2>
+                    <button id="copyButton" class="btn-primary">
+                        <i class="far fa-copy mr-2"></i>复制代码
+                    </button>
+                </div>
+
+                <div class="mb-4 flex items-center">
+                    <span id="codeLang" class="lang-badge bg-blue-100 text-blue-800"></span>
+                    <span id="codeSize" class="text-sm text-gray-500 dark:text-gray-400 ml-3"></span>
+                </div>
+
+                <div class="relative">
+                    <pre id="code-pre"><code id="codeContent" class="language-none"></code></pre>
+                    <div id="copySuccess"
+                        class="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-lg shadow-md opacity-0 transition-opacity">
+                        已复制!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let indexData = [];
+        let currentTheme = localStorage.getItem("theme") || "light";
+        let currentRawCode = ""; // 存储原始代码用于复制
+
+        // 初始化主题
+        function initTheme() {
+            if (currentTheme === "dark") {
+                document.documentElement.classList.add("dark-mode");
+                document.body.classList.add("dark-mode");
+                document.getElementById("themeToggle").checked = true;
+            } else {
+                document.documentElement.classList.remove("dark-mode");
+                document.body.classList.remove("dark-mode");
+                document.getElementById("themeToggle").checked = false;
+            }
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            if (currentTheme === "light") {
+                currentTheme = "dark";
+                document.documentElement.classList.add("dark-mode");
+                document.body.classList.add("dark-mode");
+            } else {
+                currentTheme = "light";
+                document.documentElement.classList.remove("dark-mode");
+                document.body.classList.remove("dark-mode");
+            }
+            localStorage.setItem("theme", currentTheme);
+        }
+
+        // 判断语言
+        function detectLanguage(filename) {
+            const ext = filename.split(".").pop().toLowerCase();
+            const langMap = {
+                cpp: "C++",
+                cc: "C++",
+                cxx: "C++",
+                c: "C",
+                py: "Python",
+                java: "Java",
+                js: "JavaScript",
+                ts: "TypeScript",
+                go: "Go",
+                rs: "Rust",
+                php: "PHP",
+                rb: "Ruby",
+                cs: "C#",
+                swift: "Swift",
+                kt: "Kotlin",
+                scala: "Scala",
+            };
+            return langMap[ext] || ext.toUpperCase();
+        }
+
+        // 获取 Prism 语言标识符
+        function getPrismLanguage(filename) {
+            const ext = filename.split(".").pop().toLowerCase();
+            const langMap = {
+                cpp: "cpp",
+                cc: "cpp",
+                cxx: "cpp",
+                c: "c",
+                py: "python",
+                java: "java",
+                js: "javascript",
+                ts: "typescript",
+                go: "go",
+                rs: "rust",
+                php: "php",
+                rb: "ruby",
+                cs: "csharp",
+                swift: "swift",
+                kt: "kotlin",
+                scala: "scala",
+            };
+            return langMap[ext] || "none";
+        }
+
+        // 获取语言颜色
+        function getLanguageColor(lang) {
+            const colors = {
+                "C++": "bg-blue-100 text-blue-800",
+                "C": "bg-blue-100 text-blue-800",
+                Python: "bg-yellow-100 text-yellow-800",
+                Java: "bg-red-100 text-red-800",
+                JavaScript: "bg-yellow-100 text-yellow-800",
+                TypeScript: "bg-blue-100 text-blue-800",
+                Go: "bg-cyan-100 text-cyan-800",
+                Rust: "bg-orange-100 text-orange-800",
+                PHP: "bg-purple-100 text-purple-800",
+                Ruby: "bg-red-100 text-red-800",
+                "C#": "bg-green-100 text-green-800",
+                Swift: "bg-orange-100 text-orange-800",
+                Kotlin: "bg-purple-100 text-purple-800",
+                Scala: "bg-red-100 text-red-800",
+            };
+            return colors[lang] || "bg-gray-100 text-gray-800";
+        }
+
+        // 加载索引
+        async function loadIndex() {
+            const loadingEl = document.getElementById("results");
+            loadingEl.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="loading mx-auto mb-3"></div>
+                    <p class="text-gray-500 dark:text-gray-400">加载索引中...</p>
+                </div>
+            `;
+
+            try {
+                // 从同目录下的index.json加载数据
+                const response = await fetch('./index.json');
+                if (!response.ok) {
+                    throw new Error('无法加载index.json文件');
+                }
+                indexData = await response.json();
+
+                // 显示一些随机题目提示
+                showRandomHints();
+            } catch (err) {
+                console.error("加载索引失败:", err);
+                document.getElementById("results").innerHTML = `
+                    <div class="text-center py-10">
+                        <i class="fas fa-exclamation-triangle text-4xl text-yellow-400 mb-3"></i>
+                        <p class="text-gray-500 dark:text-gray-400">加载索引失败，请刷新重试</p>
+                        <p class="text-sm text-gray-400 mt-2">错误信息: ${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+
+        // 显示随机提示
+        function showRandomHints() {
+            const hints = [
+                "尝试搜索题号或题目名称",
+                "Keep Coding!",
+            ];
+
+            document.getElementById("results").innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-lightbulb text-2xl text-yellow-400 mb-3"></i>
+                    <p class="text-gray-500 dark:text-gray-400">${hints[Math.floor(Math.random() * hints.length)]}</p>
+                </div>
+            `;
+        }
+
+        // 搜索功能
+        function search(query) {
+            query = query.trim().toLowerCase();
+            if (!query) return [];
+
+            return indexData.filter(
+                (item) =>
+                    item.id.toLowerCase().includes(query) ||
+                    item.title.toLowerCase().includes(query) ||
+                    item.filename.toLowerCase().includes(query)
+            );
+        }
+
+        // 渲染搜索结果
+        function renderResults(results, query) {
+            const container = document.getElementById("results");
+            const countEl = document.getElementById("resultsCount");
+
+            countEl.textContent = `${results.length} 个结果`;
+
+            // 如果查询为空，显示随机提示
+            if (!query.trim()) {
+                showRandomHints();
+                return;
+            }
+
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 fade-in">
+                        <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500 dark:text-gray-400">没有找到相关题目，尝试其他关键词</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = "";
+
+            results.forEach((item) => {
+                const lang = detectLanguage(item.filename);
+                const langColor = getLanguageColor(lang);
+
+                const div = document.createElement("div");
+                div.className = "card p-4 result-item cursor-pointer fade-in";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold">${item.id}. ${item.title}</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${item.filename}</p>
+                        </div>
+                        <span class="lang-badge ${langColor}">${lang}</span>
+                    </div>
+                `;
+
+                div.addEventListener("click", () => showCode(item));
+                container.appendChild(div);
+            });
+        }
+
+        // 显示代码视图
+        async function showCode(item) {
+            // 切换到代码视图
+            document.querySelector('.search-view').classList.add('hidden');
+            document.querySelector('.code-view').classList.add('active');
+
+            // 设置代码标题
+            document.getElementById("codeTitle").textContent = `${item.id}. ${item.title}`;
+
+            // 设置语言标签
+            const lang = detectLanguage(item.filename);
+            const langColor = getLanguageColor(lang);
+            document.getElementById("codeLang").className = `lang-badge ${langColor}`;
+            document.getElementById("codeLang").textContent = lang;
+
+            // 设置代码内容
+            const codeContent = document.getElementById("codeContent");
+            const preElement = document.getElementById("code-pre");
+            codeContent.textContent = "加载中...";
+
+            try {
+                const response = await fetch(item.raw_url);
+                if (!response.ok) throw new Error("无法获取代码");
+
+                const code = await response.text();
+                currentRawCode = code; // 保存原始代码用于复制
+
+                // 更新代码大小
+                const sizeKB = (new TextEncoder().encode(code).length / 1024).toFixed(1);
+                document.getElementById("codeSize").textContent = `${sizeKB} KB`;
+
+                // 使用 Prism 高亮代码
+                const prismLang = getPrismLanguage(item.filename);
+
+                // 清除之前的类
+                preElement.className = '';
+                codeContent.className = '';
+
+                // 设置新的语言类
+                preElement.classList.add(`language-${prismLang}`);
+                codeContent.classList.add(`language-${prismLang}`);
+
+                // 设置代码内容
+                codeContent.textContent = code;
+
+                // 使用 Prism 高亮
+                Prism.highlightElement(codeContent);
+
+                // 添加复制按钮到代码块
+                let copyBtn = preElement.querySelector('.copy-btn');
+                if (!copyBtn) {
+                    copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.textContent = '复制';
+                    copyBtn.onclick = function () {
+                        navigator.clipboard.writeText(currentRawCode);
+                        this.textContent = '已复制!';
+                        setTimeout(() => {
+                            this.textContent = '复制';
+                        }, 2000);
+                    };
+                    preElement.appendChild(copyBtn);
+                }
+
+            } catch (error) {
+                codeContent.textContent = `// 无法加载代码，请检查网络连接或稍后重试\n// 错误信息: ${error.message}`;
+                console.error("加载代码失败:", error);
+            }
+        }
+
+        // 返回搜索视图
+        function backToSearch() {
+            document.querySelector('.code-view').classList.remove('active');
+            setTimeout(() => {
+                document.querySelector('.search-view').classList.remove('hidden');
+            }, 300);
+        }
+
+        // 复制代码功能
+        function copyCodeToClipboard() {
+            navigator.clipboard.writeText(currentRawCode).then(() => {
+                // 显示复制成功提示
+                const copySuccess = document.getElementById("copySuccess");
+                copySuccess.classList.remove("opacity-0");
+
+                setTimeout(() => {
+                    copySuccess.classList.add("opacity-0");
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        // 初始化
+        document.addEventListener("DOMContentLoaded", function () {
+            // 初始化主题
+            initTheme();
+
+            // 主题切换事件
+            document.getElementById("themeToggle").addEventListener("change", toggleTheme);
+
+            // 搜索输入事件
+            let searchTimeout;
+            document.getElementById("searchInput").addEventListener("input", (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const query = e.target.value;
+                    const results = search(query);
+                    renderResults(results, query);
+                }, 300);
+            });
+
+            // 复制按钮事件
+            document.getElementById("copyButton").addEventListener("click", copyCodeToClipboard);
+
+            // 返回按钮事件
+            document.getElementById("backButton").addEventListener("click", backToSearch);
+
+            // 加载索引数据
+            loadIndex();
+        });
+    </script>
+</body>
+
+</html>

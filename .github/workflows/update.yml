@@ -1,0 +1,50 @@
+name: Update Index
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Generate index.json
+        run: |
+          echo "[" > index.json
+          first=true
+          for f in codes/*; do                    # you can change the code folder here
+            filename=$(basename "$f")
+            id=$(echo "$filename" | cut -d'.' -f1)
+            title=$(echo "$filename" | cut -d'.' -f2 | cut -d'.' -f1)
+            raw_url="https://raw.githubusercontent.com/${{ github.repository }}/main/codes/$filename"
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo "," >> index.json
+            fi
+            echo "  {\"id\":\"$id\",\"title\":\"$title\",\"filename\":\"$filename\",\"raw_url\":\"$raw_url\"}" >> index.json
+          done
+          echo "]" >> index.json
+
+      - name: Commit index.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update index.json"
+            git push
+          else
+            echo "No changes to commit"
+          fi
