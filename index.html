@@ -564,11 +564,34 @@
             );
         }
 
+        function sortResults(results, query) {
+            const queryNum = parseInt(query);
+
+            return results.sort((a, b) => {
+                const aNum = parseInt(a.id);
+                const bNum = parseInt(b.id);
+
+                if (!isNaN(queryNum)) {
+                    if (aNum === queryNum && bNum !== queryNum) return -1;
+                    if (aNum !== queryNum && bNum === queryNum) return 1;
+
+                    const aHasQuery = a.id.includes(query) || a.title.includes(query);
+                    const bHasQuery = b.id.includes(query) || b.title.includes(query);
+
+                    if (aHasQuery && !bHasQuery) return -1;
+                    if (!aHasQuery && bHasQuery) return 1;
+                }
+
+                return aNum - bNum;
+            });
+        }
+        
         // 渲染搜索结果
         function renderResults(results, query) {
             const container = document.getElementById("results");
             const countEl = document.getElementById("resultsCount");
 
+            results = sortResults(results, query);
             countEl.textContent = `${results.length} 个结果`;
 
             // 如果查询为空，显示随机提示
