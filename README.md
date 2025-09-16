@@ -4,9 +4,11 @@
 
 ---
 
-大致原理：
+**工作流：**
 
-将代码文件存放于 codes 文件夹（遵循 LeetCode 插件自动生成的文件名）
+代码文件存放于 codes 文件夹（遵循 LeetCode 插件自动生成的文件名）
+
+​	（这个仓库的 `code` 存放了两个测试文件，便于生成正确的 `index.json`）
 
 Github Actions 会在每次仓库更新时更新代码清单（`index.json`）
 
@@ -16,22 +18,24 @@ Github Pages 根据 `index.json` 的内容生成一个静态页面，可以根�
 
 ---
 
-如何使用？
+**如何使用？**
 
 1. Fork 这个仓库，并且在本地同步一份
 
-    （可能需要删除原仓库的一些内容，比如这个README文件和 `images` 文件夹）
+    （只需要删除这个README文件和 `images` 文件夹，并且清空 `code` 文件夹放入新的代码文件即可）
 
 2. 使用 VSCode-LeetCode 插件进行做题，将题解文件保存至本地仓库的 `codes` 文件夹
 
-    （每次向 Github 推送更改时，`index.json` 会进行同步更新）
+    （每次向 Github 推送更改时，`index.json` 会根据 `code` 文件夹进行同步更新）
 
-3. 为仓库配置 Github Pages 
+3. 记得为仓库配置 Github Pages 
 
 ---
 
 效果图：
 
 ![image-20250916225651971](images/image-20250916225651971.png)
+
+你可以访问我的 [LeetCode 题解搜索网站](https://leetcode.nopthon.icu/) 看看效果
 
 **欢迎 Fork 使用 ❤**
