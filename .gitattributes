@@ -1,0 +1,6 @@
+# Only files in the 'codes/' directory will be counted for language statistics.
+# This way, the language page displays the statistics of the languages you used for problem solving.
+# Which is GOOD ~
+*.html linguist-vendored
+*.json linguist-vendored
+.github/workflows/*.yml linguist-vendored
