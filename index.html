@@ -7,23 +7,8 @@
     <title>LeetCode 题解搜索</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-c.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cpp.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-csharp.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-go.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-rust.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-ruby.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-swift.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-kotlin.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-scala.min.js"></script>
-
-
+    <link href="prism.css" rel="stylesheet">
+    <script src="prism.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -362,6 +347,40 @@
             background-color: #10b981;
             border-color: #10b981;
         }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1.5rem;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-btn:hover {
+            background-color: #f1f5f9;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -382,7 +401,7 @@
                 <div class="flex items-center">
                     <i class="fas fa-sun text-yellow-400 dark:text-gray-600 mr-2"></i>
                     <label class="theme-switch">
-                        <input type="checkbox" id="themeToggle" />
+                        <input type="checkbox" id="themeToggle" aria-label="切换深色模式" />
                         <span class="slider"></span>
                     </label>
                     <i class="fas fa-moon text-gray-600 dark:text-yellow-400 ml-2"></i>
@@ -431,6 +450,17 @@
                         <p class="text-gray-500 dark:text-gray-400">输入关键词搜索题解</p>
                     </div>
                 </div>
+
+                <!-- 分页控件 -->
+                <div id="pagination" class="pagination hidden">
+                    <button id="prev-page" class="page-btn" aria-label="上一页">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div id="page-numbers" class="flex gap-1"></div>
+                    <button id="next-page" class="page-btn" aria-label="下一页">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -472,6 +502,8 @@
         let currentTheme = localStorage.getItem("theme") || "light";
         let currentRawCode = ""; // 存储原始代码用于复制
         let currentFilter = "all"; // 当前筛选器状态
+        let currentPage = 1; // 当前页码
+        const itemsPerPage = 10; // 每页显示的项目数
 
         // 初始化主题
         function initTheme() {
@@ -589,6 +621,7 @@
             return source;
         }
 
+
         // 加载索引
         async function loadIndex() {
             const loadingEl = document.getElementById("results");
@@ -620,7 +653,6 @@
                 `;
             }
         }
-
 
         // 显示随机提示
         function showRandomHints() {
@@ -654,6 +686,7 @@
         // 筛选功能
         function filterResults(source) {
             currentFilter = source;
+            currentPage = 1; // 重置到第一页
             
             // 更新按钮状态
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -674,39 +707,186 @@
             renderResults(results, query);
         }
 
-        function sortResults(results, query) {
-            const queryNum = parseInt(query);
-
+        // 排序结果
+        function sortResults(results) {
             return results.sort((a, b) => {
-                const aNum = parseInt(a.id);
-                const bNum = parseInt(b.id);
-
-                if (!isNaN(queryNum)) {
-                    if (aNum === queryNum && bNum !== queryNum) return -1;
-                    if (aNum !== queryNum && bNum === queryNum) return 1;
-
-                    const aHasQuery = a.id.includes(query) || a.title.includes(query);
-                    const bHasQuery = b.id.includes(query) || b.title.includes(query);
-
-                    if (aHasQuery && !bHasQuery) return -1;
-                    if (!aHasQuery && bHasQuery) return 1;
+                // 尝试提取数字进行排序
+                const numA = parseInt(a.id.replace('P', ''));
+                const numB = parseInt(b.id.replace('P', ''));
+                
+                // 如果都能提取到数字，则按数字排序
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return numA - numB;
                 }
-
-                return aNum - bNum;
+                
+                // 否则按字符串排序
+                return a.id.localeCompare(b.id);
             });
         }
-        
+
+        // 渲染分页控件
+        function renderPagination(totalItems, currentPage, itemsPerPage) {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const paginationEl = document.getElementById("pagination");
+            const pageNumbersEl = document.getElementById("page-numbers");
+            
+            // 如果只有一页或没有数据，隐藏分页控件
+            if (totalPages <= 1) {
+                paginationEl.classList.add("hidden");
+                return;
+            }
+            
+            paginationEl.classList.remove("hidden");
+            
+            // 清空页码按钮
+            pageNumbersEl.innerHTML = '';
+            
+            // 计算要显示的页码范围
+            const maxVisiblePages = 5; // 最多显示5个页码按钮
+            let startPage, endPage;
+            
+            if (totalPages <= maxVisiblePages) {
+                // 如果总页数小于等于最大显示页数，显示所有页码
+                startPage = 1;
+                endPage = totalPages;
+            } else {
+                // 计算显示的页码范围
+                const halfVisible = Math.floor(maxVisiblePages / 2);
+                
+                if (currentPage <= halfVisible) {
+                    // 当前页靠近开头
+                    startPage = 1;
+                    endPage = maxVisiblePages;
+                } else if (currentPage + halfVisible >= totalPages) {
+                    // 当前页靠近结尾
+                    startPage = totalPages - maxVisiblePages + 1;
+                    endPage = totalPages;
+                } else {
+                    // 当前页在中间
+                    startPage = currentPage - halfVisible;
+                    endPage = currentPage + halfVisible;
+                }
+            }
+            
+            // 添加第一页按钮（如果不是第一页且不在显示范围内）
+            if (startPage > 1) {
+                const firstPageBtn = document.createElement("button");
+                firstPageBtn.className = `page-btn ${1 === currentPage ? 'active' : ''}`;
+                firstPageBtn.textContent = '1';
+                firstPageBtn.dataset.page = '1';
+                pageNumbersEl.appendChild(firstPageBtn);
+                
+                // 添加省略号
+                if (startPage > 2) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.className = "px-2 py-1 text-gray-500";
+                    ellipsis.textContent = "...";
+                    pageNumbersEl.appendChild(ellipsis);
+                }
+            }
+            
+            // 创建页码按钮
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement("button");
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.dataset.page = i;
+                pageNumbersEl.appendChild(pageBtn);
+            }
+            
+            // 添加最后一页按钮（如果不是最后一页且不在显示范围内）
+            if (endPage < totalPages) {
+                // 添加省略号
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.className = "px-2 py-1 text-gray-500";
+                    ellipsis.textContent = "...";
+                    pageNumbersEl.appendChild(ellipsis);
+                }
+                
+                const lastPageBtn = document.createElement("button");
+                lastPageBtn.className = `page-btn ${totalPages === currentPage ? 'active' : ''}`;
+                lastPageBtn.textContent = totalPages;
+                lastPageBtn.dataset.page = totalPages;
+                pageNumbersEl.appendChild(lastPageBtn);
+            }
+            
+            // 更新上一页/下一页按钮状态
+            const prevBtn = document.getElementById("prev-page");
+            const nextBtn = document.getElementById("next-page");
+            
+            prevBtn.className = `page-btn ${currentPage === 1 ? 'disabled' : ''}`;
+            nextBtn.className = `page-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+            
+            // 绑定事件（只绑定一次）
+            if (!prevBtn.dataset.bound) {
+                prevBtn.addEventListener('click', handlePrevPage);
+                prevBtn.dataset.bound = 'true';
+            }
+            
+            if (!nextBtn.dataset.bound) {
+                nextBtn.addEventListener('click', handleNextPage);
+                nextBtn.dataset.bound = 'true';
+            }
+        }
+
+        // 处理上一页按钮点击
+        function handlePrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                const query = document.getElementById("searchInput").value;
+                const results = search(query);
+                renderResults(results, query);
+            }
+        }
+
+        // 处理下一页按钮点击
+        function handleNextPage() {
+            const totalPages = Math.ceil(getFilteredResultsCount() / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                const query = document.getElementById("searchInput").value;
+                const results = search(query);
+                renderResults(results, query);
+            }
+        }
+
+        // 获取当前筛选条件下的结果总数
+        function getFilteredResultsCount() {
+            const query = document.getElementById("searchInput").value;
+            const results = search(query);
+            return results.length;
+        }
+
+        // 绑定页码按钮事件
+        function bindPageButtons() {
+            document.querySelectorAll('.page-btn:not(#prev-page):not(#next-page)').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const page = parseInt(this.dataset.page);
+                    if (!isNaN(page) && page !== currentPage) {
+                        currentPage = page;
+                        const query = document.getElementById("searchInput").value;
+                        const results = search(query);
+                        renderResults(results, query);
+                    }
+                });
+            });
+        }
+
         // 渲染搜索结果
         function renderResults(results, query) {
             const container = document.getElementById("results");
             const countEl = document.getElementById("resultsCount");
 
-            results = sortResults(results, query);
+            results = sortResults(results);
             countEl.textContent = `${results.length} 个结果`;
 
-            // 如果查询为空，显示随机提示
-            if (!query.trim() && currentFilter === "all") {
+            // 如果查询为空且是特定来源筛选，显示所有题目
+            if (!query.trim() && currentFilter !== "all") {
+                // 不显示随机提示，而是显示所有题目
+            } else if (!query.trim() && currentFilter === "all") {
                 showRandomHints();
+                document.getElementById("pagination").classList.add("hidden");
                 return;
             }
 
@@ -717,12 +897,19 @@
                         <p class="text-gray-500 dark:text-gray-400">没有找到相关题目，尝试其他关键词</p>
                     </div>
                 `;
+                document.getElementById("pagination").classList.add("hidden");
                 return;
             }
 
+            // 计算分页数据
+            const totalPages = Math.ceil(results.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, results.length);
+            const paginatedResults = results.slice(startIndex, endIndex);
+
             container.innerHTML = "";
 
-            results.forEach((item) => {
+            paginatedResults.forEach((item) => {
                 const lang = detectLanguage(item.filename);
                 const langColor = getLanguageColor(lang);
                 const sourceColor = getSourceColor(item.source);
@@ -746,6 +933,12 @@
                 div.addEventListener("click", () => showCode(item));
                 container.appendChild(div);
             });
+
+            // 渲染分页控件
+            renderPagination(results.length, currentPage, itemsPerPage);
+            
+            // 绑定页码按钮事件
+            setTimeout(bindPageButtons, 0);
         }
 
         // 显示代码视图
@@ -763,12 +956,6 @@
             document.getElementById("codeSource").className = `source-badge ${sourceColor}`;
             document.getElementById("codeSource").textContent = sourceName;
 
-            // 设置语言标签
-            const lang = detectLanguage(item.filename);
-            const langColor = getLanguageColor(lang);
-            document.getElementById("codeLang").className = `lang-badge ${langColor}`;
-            document.getElementById("codeLang").textContent = lang;
-
             // 设置代码内容
             const codeContent = document.getElementById("codeContent");
             const preElement = document.getElementById("code-pre");
@@ -785,9 +972,12 @@
                 const sizeKB = (new TextEncoder().encode(code).length / 1024).toFixed(1);
                 document.getElementById("codeSize").textContent = `${sizeKB} KB`;
 
-                // 使用 Prism 高亮代码
+                // 获取 prism 语言
                 const prismLang = getPrismLanguage(item.filename);
-
+                
+                // 获取显示语言
+                const displayLang = detectLanguage(item.filename);
+                
                 // 清除之前的类
                 preElement.className = '';
                 codeContent.className = '';
@@ -796,26 +986,18 @@
                 preElement.classList.add(`language-${prismLang}`);
                 codeContent.classList.add(`language-${prismLang}`);
 
+                // 更新语言标签显示
+                const langColor = getLanguageColor(displayLang);
+                const codeLangElement = document.getElementById("codeLang");
+                codeLangElement.className = `lang-badge ${langColor}`;
+                codeLangElement.textContent = displayLang;
+
                 // 设置代码内容
                 codeContent.textContent = code;
 
                 // 使用 Prism 高亮
-                Prism.highlightElement(codeContent);
-
-                // 添加复制按钮到代码块
-                let copyBtn = preElement.querySelector('.copy-btn');
-                if (!copyBtn) {
-                    copyBtn = document.createElement('button');
-                    copyBtn.className = 'copy-btn';
-                    copyBtn.textContent = '复制';
-                    copyBtn.onclick = function () {
-                        navigator.clipboard.writeText(currentRawCode);
-                        this.textContent = '已复制!';
-                        setTimeout(() => {
-                            this.textContent = '复制';
-                        }, 2000);
-                    };
-                    preElement.appendChild(copyBtn);
+                if (typeof Prism !== 'undefined') {
+                    Prism.highlightElement(codeContent);
                 }
 
             } catch (error) {
@@ -859,6 +1041,7 @@
             let searchTimeout;
             document.getElementById("searchInput").addEventListener("input", (e) => {
                 clearTimeout(searchTimeout);
+                currentPage = 1; // 搜索时重置到第一页
                 searchTimeout = setTimeout(() => {
                     const query = e.target.value;
                     const results = search(query);
