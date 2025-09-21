@@ -28,12 +28,20 @@ jobs:
             id=$(echo "$filename" | cut -d'.' -f1)
             title=$(echo "$filename" | cut -d'.' -f2 | cut -d'.' -f1)
             raw_url="https://raw.githubusercontent.com/${{ github.repository }}/main/codes/$filename"
+            
+            # NEW: Determine source based on filename pattern
+            if [[ "$filename" == P* ]]; then
+              source="luogu"
+            else
+              source="leetcode"
+            fi
+            
             if [ "$first" = true ]; then
               first=false
             else
               echo "," >> index.json
             fi
-            echo "  {\"id\":\"$id\",\"title\":\"$title\",\"filename\":\"$filename\",\"raw_url\":\"$raw_url\"}" >> index.json
+            echo "  {\"id\":\"$id\",\"title\":\"$title\",\"filename\":\"$filename\",\"raw_url\":\"$raw_url\",\"source\":\"$source\"}" >> index.json
           done
           echo "]" >> index.json
 

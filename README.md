@@ -2,6 +2,8 @@
 
 **为基于 VSCode-LeetCode 插件的本地刷题工作流添加自动化代码管理和在线搜索查看功能。通过 GitHub Actions + GitHub Pages，将本地题解转换为可搜索的在线代码库**
 
+> **Update：添加了一个 Luogu_added 分支，该分支会根据 codes 的文件名开头是否包含 P （表示 Luogu 主题库的题号）区分来源，前端 HTML 页面也可以进行相应的筛选（main 分支没有变动，考虑到项目本质是 LeetCode 的 Reviewer）**
+
 ---
 
 **工作流：**

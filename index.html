@@ -308,6 +308,60 @@
         pre:hover .copy-btn {
             opacity: 1;
         }
+
+        /* 来源标签样式 */
+        .source-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .source-leetcode {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .source-luogu {
+            background-color: #10b981;
+            color: white;
+        }
+
+        /* 筛选按钮样式 */
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .filter-btn:hover {
+            opacity: 0.9;
+        }
+
+        .filter-btn.active {
+            color: white;
+        }
+
+        .filter-btn.all.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-color: transparent;
+        }
+
+        .filter-btn.leetcode.active {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .filter-btn.luogu.active {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
     </style>
 </head>
 
@@ -354,6 +408,16 @@
                 </div>
             </div>
 
+            <!-- 筛选器 -->
+            <div class="card p-4 mb-6">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium mr-2">来源筛选:</span>
+                    <button id="filter-all" class="filter-btn all active">全部</button>
+                    <button id="filter-leetcode" class="filter-btn leetcode">LeetCode</button>
+                    <button id="filter-luogu" class="filter-btn luogu">Luogu</button>
+                </div>
+            </div>
+
             <!-- 搜索结果 -->
             <div class="w-full">
                 <div class="flex justify-between items-center mb-4">
@@ -387,6 +451,7 @@
                 </div>
 
                 <div class="mb-4 flex items-center">
+                    <span id="codeSource" class="source-badge mr-2"></span>
                     <span id="codeLang" class="lang-badge bg-blue-100 text-blue-800"></span>
                     <span id="codeSize" class="text-sm text-gray-500 dark:text-gray-400 ml-3"></span>
                 </div>
@@ -406,6 +471,7 @@
         let indexData = [];
         let currentTheme = localStorage.getItem("theme") || "light";
         let currentRawCode = ""; // 存储原始代码用于复制
+        let currentFilter = "all"; // 当前筛选器状态
 
         // 初始化主题
         function initTheme() {
@@ -503,6 +569,26 @@
             return colors[lang] || "bg-gray-100 text-gray-800";
         }
 
+        // 获取来源颜色
+        function getSourceColor(source) {
+            if (source === "leetcode") {
+                return "source-leetcode";
+            } else if (source === "luogu") {
+                return "source-luogu";
+            }
+            return "bg-gray-100 text-gray-800";
+        }
+
+        // 获取来源显示名称
+        function getSourceDisplayName(source) {
+            if (source === "leetcode") {
+                return "LeetCode";
+            } else if (source === "luogu") {
+                return "Luogu";
+            }
+            return source;
+        }
+
         // 加载索引
         async function loadIndex() {
             const loadingEl = document.getElementById("results");
@@ -558,10 +644,34 @@
 
             return indexData.filter(
                 (item) =>
-                    item.id.toLowerCase().includes(query) ||
+                    (item.id.toLowerCase().includes(query) ||
                     item.title.toLowerCase().includes(query) ||
-                    item.filename.toLowerCase().includes(query)
+                    item.filename.toLowerCase().includes(query)) &&
+                    (currentFilter === "all" || item.source === currentFilter)
             );
+        }
+
+        // 筛选功能
+        function filterResults(source) {
+            currentFilter = source;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (source === "all") {
+                document.getElementById("filter-all").classList.add('active');
+            } else if (source === "leetcode") {
+                document.getElementById("filter-leetcode").classList.add('active');
+            } else if (source === "luogu") {
+                document.getElementById("filter-luogu").classList.add('active');
+            }
+            
+            // 重新搜索并渲染结果
+            const query = document.getElementById("searchInput").value;
+            const results = search(query);
+            renderResults(results, query);
         }
 
         function sortResults(results, query) {
@@ -595,7 +705,7 @@
             countEl.textContent = `${results.length} 个结果`;
 
             // 如果查询为空，显示随机提示
-            if (!query.trim()) {
+            if (!query.trim() && currentFilter === "all") {
                 showRandomHints();
                 return;
             }
@@ -615,6 +725,8 @@
             results.forEach((item) => {
                 const lang = detectLanguage(item.filename);
                 const langColor = getLanguageColor(lang);
+                const sourceColor = getSourceColor(item.source);
+                const sourceName = getSourceDisplayName(item.source);
 
                 const div = document.createElement("div");
                 div.className = "card p-4 result-item cursor-pointer fade-in";
@@ -624,7 +736,10 @@
                             <h3 class="font-semibold">${item.id}. ${item.title}</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${item.filename}</p>
                         </div>
-                        <span class="lang-badge ${langColor}">${lang}</span>
+                        <div class="flex items-center">
+                            <span class="source-badge ${sourceColor}">${sourceName}</span>
+                            <span class="lang-badge ${langColor}">${lang}</span>
+                        </div>
                     </div>
                 `;
 
@@ -641,6 +756,12 @@
 
             // 设置代码标题
             document.getElementById("codeTitle").textContent = `${item.id}. ${item.title}`;
+
+            // 设置来源标签
+            const sourceColor = getSourceColor(item.source);
+            const sourceName = getSourceDisplayName(item.source);
+            document.getElementById("codeSource").className = `source-badge ${sourceColor}`;
+            document.getElementById("codeSource").textContent = sourceName;
 
             // 设置语言标签
             const lang = detectLanguage(item.filename);
@@ -744,6 +865,11 @@
                     renderResults(results, query);
                 }, 300);
             });
+
+            // 筛选器事件
+            document.getElementById("filter-all").addEventListener("click", () => filterResults("all"));
+            document.getElementById("filter-leetcode").addEventListener("click", () => filterResults("leetcode"));
+            document.getElementById("filter-luogu").addEventListener("click", () => filterResults("luogu"));
 
             // 复制按钮事件
             document.getElementById("copyButton").addEventListener("click", copyCodeToClipboard);
