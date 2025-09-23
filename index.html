@@ -711,8 +711,25 @@
         function sortResults(results) {
             return results.sort((a, b) => {
                 // 尝试提取数字进行排序
-                const numA = parseInt(a.id.replace('P', ''));
-                const numB = parseInt(b.id.replace('P', ''));
+                let numA = parseInt(a.id);
+                let numB = parseInt(b.id);
+                
+                // 处理洛谷题目，如果以P或B开头则尝试提取数字并减去1000
+                if (a.id.startsWith('P') || a.id.startsWith('B')) {
+                    const strippedA = a.id.replace(/^[PB]/, '');
+                    const parsedA = parseInt(strippedA);
+                    if (!isNaN(parsedA)) {
+                        numA = parsedA - 1000;
+                    }
+                }
+                
+                if (b.id.startsWith('P') || b.id.startsWith('B')) {
+                    const strippedB = b.id.replace(/^[PB]/, '');
+                    const parsedB = parseInt(strippedB);
+                    if (!isNaN(parsedB)) {
+                        numB = parsedB - 1000;
+                    }
+                }
                 
                 // 如果都能提取到数字，则按数字排序
                 if (!isNaN(numA) && !isNaN(numB)) {
