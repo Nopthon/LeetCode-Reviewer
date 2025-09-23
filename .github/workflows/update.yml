@@ -30,7 +30,7 @@ jobs:
             raw_url="https://raw.githubusercontent.com/${{ github.repository }}/main/codes/$filename"
             
             # NEW: Determine source based on filename pattern
-            if [[ "$filename" == P* ]]; then
+            if [[ "$filename" == P* ]] || [[ "$filename" == B* ]]; then
               source="luogu"
             else
               source="leetcode"
