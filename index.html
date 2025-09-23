@@ -998,6 +998,13 @@
                 // 使用 Prism 高亮
                 if (typeof Prism !== 'undefined') {
                     Prism.highlightElement(codeContent);
+                    
+                    // 使代码中的链接在新标签页中打开
+                    const links = codeContent.querySelectorAll('a[href]');
+                    links.forEach(link => {
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                    });
                 }
 
             } catch (error) {
