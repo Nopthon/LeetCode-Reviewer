@@ -667,6 +667,13 @@
 
                 // 使用 Prism 高亮
                 Prism.highlightElement(codeContent);
+                
+                // 使代码中的链接在新标签页中打开
+                    const links = codeContent.querySelectorAll('a[href]');
+                    links.forEach(link => {
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                    });
 
                 // 添加复制按钮到代码块
                 let copyBtn = preElement.querySelector('.copy-btn');
